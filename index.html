@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>JS Test</title>
+    <style>
+        .page {
+            background-color: #DCDCDC;
+        }
+        .wrapper {
+            margin: 0 auto;
+            width: 1000px;
+        }
+        .button {
+            display: block;
+            margin-top: 10px;
+            width: 120px;
+        }
+        .menu {
+            float: left;
+            width: 120px;
+            padding: 5px 15px 15px 15px;
+            background-color: #F8F8FF;
+            border-radius: 7px;
+        }
+        .content {
+            float: left;
+            margin: 0 15px;
+            width: 820px;
+        }
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .log-table th {
+            border-width: 1px;
+            padding: 3px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #DEDEDE;
+        }
+        .log-table td {
+            border-width: 1px;
+            padding: 3px;
+            border-style: solid;
+            border-color: #666666;
+            background-color: #FFFFFF;
+        }
+    </style>
+    <script type="text/javascript">
+
+        /**
+          * Storage related functions.
+          */
+
+        var database = null;
+        var STORAGE_KEY = "KEEEEEEEY!!!!!"
+        
+        function initiStorage() {
+                try{
+                    database = open777Database('mydb', '1.0', 'JS Test DB', 1 * 1024 * 1024);
+                } catch (e) {
+                    // unsupported.
+                }
+
+            // Create LOGS table if WEB SQL is supported; otherwise we will use local storage.
+            if (database) {
+                database.transaction(function(tx) {
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS LOGS (message TEXT NOT NULL, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);", []);
+                });
+            }
+        }
+
+        function deleteLogs() {
+            if (database) {
+                database.transaction(function(tx) {
+                    tx.executeSql("DELETE FROM LOGS;", []);
+                });
+                return;
+            }
+
+            localStorage.removeItem(STORAGE_KEY);
+        }
+
+        function getLogs(callback) {
+            if (database) {
+                database.transaction(function(tx) {
+                    tx.executeSql('SELECT * FROM LOGS ORDER BY date', [], function(tx, results) {
+                
+                        var items = [];
+                
+                        for (var i = 0; i < results.rows.length; i++) {
+                            var item = results.rows.item(i);
+                            items.push({
+                                message: item.message,
+                                date: new Date(item.date)
+                            });
+                        }
+                
+                        if (callback) {
+                            callback(items);
+                        }
+                    });
+                });
+                
+                return;
+            }
+
+            var encreptedItems = localStorage.getItem(STORAGE_KEY);
+            var items = encreptedItems ? JSON.parse(encreptedItems) : [];
+            callback(items);
+        }
+
+        function addLog(message) {
+            if (database) {
+                database.transaction(function(tx) {
+                    tx.executeSql('INSERT INTO LOGS (message) values (?)', [message]);
+                });
+                return;
+            }
+
+            var encreptedItems = localStorage.getItem(STORAGE_KEY);
+            var items = encreptedItems ? JSON.parse(encreptedItems) : [];
+            items.push({message:message, date: (new Date()).getTime()});
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+
+        /**
+          * Markup related functions.
+          */
+
+        function showLogs() {
+
+            var getLogsCallback = function(items) {
+                var tableBody = document.getElementById('log-table-body');
+                //tableBody.innerHTML = '';
+
+                // Don't update previous rows (assume that shown N logs are the same as the first N selected entries).
+                for (var i = tableBody.childElementCount; i < items.length; i++) {
+                    var item = items[i];
+
+                    var tr = document.createElement("tr");
+                    var td = document.createElement("td");
+                    td.innerText = item.date.toLocaleString();
+
+                    tr.appendChild(td);
+                    td = document.createElement("td");
+                    td.innerText = item.message;
+                    tr.appendChild(td);
+                    tableBody.appendChild(tr);
+                }
+            }
+
+            getLogs(getLogsCallback);
+        }
+
+        function clearLogs() {
+            deleteLogs();
+
+            var tableBody = document.getElementById('log-table-body');
+            tableBody.innerHTML = '';
+        }
+
+        function onClick(event) {
+            addLog('"' + event.target.value + '" button was clicked.');
+            showLogs();
+        }
+
+        function onLoad() {
+
+            // Add event listeners to all buttons.
+            var buttons = document.getElementsByClassName("button");
+            if (buttons) {
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].addEventListener('click', onClick);
+                }
+            }
+            
+            initiStorage();
+            showLogs();
+        }
+
+        window.onload = onLoad;
+    </script>
+</head>
+
+<body class="page">
+    <div class="wrapper">
+        <div class="menu">
+            <input type="button" value="Click Me 1" class="button">
+            <input type="button" value="Click Me 2" class="button">
+            <input type="button" value="Click Me 3" class="button">
+            <input type="button" value="Click Me 4" class="button">
+            <input type="button" value="Click Me 5" class="button">
+            <input type="button" value="Click Me 6" class="button">
+            <a href="javascript:clearLogs();">clear</a>
+        </div>
+        <div class="content">
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th style="width:170px">Time</th>
+                        <th>Log message</th>
+                    </tr>
+                </thead>
+                <tbody id="log-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
