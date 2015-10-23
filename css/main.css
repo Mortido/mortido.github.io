@@ -1,0 +1,41 @@
+.page {
+    background-color: #dcdcdc;
+	background-image: url("../images/bg.jpg");
+}
+
+
+/* reveal plugin css */
+.rv-cell{
+	border: 1px dotted #000000;
+	/*width: 120px;
+	height: 84px;*/
+	display: inline-block;
+	
+	width: 90px;
+	height: 63px;
+	margin: 2px;
+
+	text-align: center;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 28px;
+	font-weight: bold;
+	line-height: 63px;
+}
+
+.rv-cell-released{
+	background-color: rgba(255, 255, 255, 0.25);
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.rv-cell-pressed{
+	background-color: rgba(0, 0, 0, 0.75);
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.rv-row{
+	white-space: nowrap;
+}
+
+.rv-grid{
+	display: inline-block;
+}
